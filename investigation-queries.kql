@@ -1,0 +1,112 @@
+// ============================================================
+// CEO ACCOUNT TAKEOVER INVESTIGATION
+// Cloudora - Simulated SOC Environment
+// ============================================================
+
+
+// 0. Validate the authentication log dataset
+
+CloudoraSignIn_CL
+| count
+
+
+// 1. Investigate CEO Daniel Reeve's authentication activity
+
+CloudoraSignIn_CL
+| where UserPrincipalName == "daniel.reeve@cloudora.io"
+| where TimeGenerated between (datetime(2026-08-10) .. datetime(2026-08-11))
+| project TimeGenerated, AppDisplayName, IPAddress, City, Country, ResultType, ResultDescription
+| order by TimeGenerated asc
+
+
+// 2. Establish Daniel Reeve's normal sign-in baseline
+
+CloudoraSignIn_CL
+| where UserPrincipalName == "daniel.reeve@cloudora.io"
+| summarize SignIns=count(), FirstSeen=min(TimeGenerated), LastSeen=max(TimeGenerated) by Country, City, IPAddress
+| order by SignIns desc
+
+
+// 3. Compare suspicious travel activity against Omar Farah's baseline
+
+CloudoraSignIn_CL
+| where UserPrincipalName == "omar.farah@cloudora.io"
+| summarize SignIns=count(), FirstSeen=min(TimeGenerated), LastSeen=max(TimeGenerated) by Country, City, IPAddress
+| order by SignIns desc
+
+
+// 4. Identify IP addresses generating failed authentication attempts
+// ResultType 50126 represents failed authentication in this dataset.
+
+CloudoraSignIn_CL
+| where ResultType == "50126"
+| summarize Failures=count(), TargetedAccounts=dcount(UserPrincipalName) by IPAddress, Country
+| order by Failures desc
+
+
+// 5. Analyse attacker-associated authentication activity over time
+
+CloudoraSignIn_CL
+| where IPAddress startswith "102.89."
+| summarize Attempts=count() by bin(TimeGenerated, 1d), ResultType
+
+
+// 6. Investigate audit activity originating from attacker infrastructure
+
+CloudoraAudit_CL
+| where IPAddress startswith "102.89."
+| project TimeGenerated, ActivityDisplayName, TargetUser, Details
+| order by TimeGenerated asc
+
+
+// 7. Identify successful authentications from attacker infrastructure
+
+CloudoraSignIn_CL
+| where IPAddress startswith "102.89." and ResultType == "0"
+| summarize by UserPrincipalName, IPAddress, TimeGenerated
+| order by TimeGenerated asc
+
+
+// 8. Investigate Priya Nair's authentication activity
+
+CloudoraSignIn_CL
+| where UserPrincipalName == "priya.nair@cloudora.io"
+| project TimeGenerated, AppDisplayName, IPAddress, City, Country, ResultType, ResultDescription
+| order by TimeGenerated desc
+
+
+// 9. Establish Priya Nair's normal sign-in baseline
+
+CloudoraSignIn_CL
+| where UserPrincipalName == "priya.nair@cloudora.io"
+| summarize SignIns=count(), FirstSeen=min(TimeGenerated), LastSeen=max(TimeGenerated) by Country, City, IPAddress
+| order by SignIns desc
+
+
+// 10. Check Priya Nair's audit activity for persistence
+
+CloudoraAudit_CL
+| where TargetUser == "priya.nair@cloudora.io"
+| project TimeGenerated, ActivityDisplayName, TargetUser, IPAddress, Details
+| order by TimeGenerated asc
+
+
+// 11. Identify additional accounts targeted by the password spray
+// Excludes the two accounts confirmed as compromised.
+
+CloudoraSignIn_CL
+| where IPAddress startswith "102.89." and ResultType == "50126"
+| where UserPrincipalName !in ("daniel.reeve@cloudora.io", "priya.nair@cloudora.io")
+| summarize by UserPrincipalName
+| order by UserPrincipalName asc
+
+
+// 12. Password-spray detection query
+// Detects an IP generating more than 10 failed authentications
+// against more than 10 distinct accounts within a six-hour window.
+
+CloudoraSignIn_CL
+| where ResultType == "50126"
+| summarize Failures=count(), TargetedAccounts=dcount(UserPrincipalName) by IPAddress, Country, bin(TimeGenerated, 6h)
+| where Failures > 10 and TargetedAccounts > 10
+| order by Failures desc
