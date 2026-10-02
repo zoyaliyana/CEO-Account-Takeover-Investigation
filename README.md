@@ -81,6 +81,8 @@ CloudoraSignIn_CL
 ```
 
 **Finding:** The logs showed repeated failed authentication attempts from Lagos-based IP address `102.89.44.17`, followed by a successful Microsoft 365 sign-in at 03:12:05 UTC. Additional successful access to Outlook Web and Azure Portal followed from the same IP address, making the activity suspicious and requiring further investigation.
+
+[View evidence screenshot](screenshots/01-ceo-suspicious-signins.png)
 ### 2. Password Spray Analysis
 
 I expanded the investigation beyond the CEO account to determine whether the suspicious activity was part of a wider attack. I analysed failed authentication attempts to identify source IP addresses targeting multiple Cloudora accounts.
@@ -99,6 +101,10 @@ CloudoraSignIn_CL
 - `102.89.44.23` — 28 failures targeting 18 accounts
 
 The repeated failures across multiple accounts were consistent with a password-spraying campaign. Across the wider investigation, 26 unique Cloudora accounts were targeted.
+
+[View evidence screenshot](screenshots/02-password-spray-analysis.png)
+
+[View password-spray timeline](screenshots/03-password-spray-timeline.png)
 ### 3. Persistence Investigation
 
 After confirming suspicious authentication activity, I analysed audit logs associated with the attacker infrastructure to determine whether any persistence mechanisms had been established.
@@ -116,6 +122,8 @@ CloudoraAudit_CL
 - At **03:31:09 UTC**, an **RSS Subscriptions inbox rule** was created to move finance and invoice-related emails and mark them as read.
 
 These events showed that the attacker had established persistence on the compromised CEO account and attempted to conceal potentially sensitive finance-related email activity.
+
+[View persistence evidence](screenshots/04-persistence-evidence.png)
 ### 4. Compromise Scoping
 
 I then searched for successful authentication activity originating from the attacker-associated `102.89.*` infrastructure to determine which targeted accounts had evidence of successful compromise.
@@ -133,6 +141,8 @@ CloudoraSignIn_CL
 - **Priya Nair** — two successful events from `102.89.45.101`
 
 This established that Daniel Reeve and Priya Nair were the two accounts with successful attacker-associated authentication activity. The remaining targeted accounts were investigated separately and were not confirmed as compromised from the available evidence.
+
+[View compromised-account scoping evidence](screenshots/05-compromised-account-scoping.png)
 ## Response & Remediation
 
 Based on the investigation findings, the following containment and remediation actions were identified:
@@ -151,6 +161,7 @@ To reduce the likelihood and impact of similar identity-based attacks, the follo
 
 - Require MFA for all users and disable legacy authentication where possible.
 - Implement password-spray detection for repeated authentication failures across multiple accounts.
+[View password-spray detection query](screenshots/06-password-spray-detection.png)
 - Generate alerts for new MFA method registrations and suspicious inbox-rule creation, particularly for privileged and executive accounts.
 - Review Conditional Access policies and apply stronger authentication controls to sign-ins from unexpected or high-risk locations.
 - Require precautionary password resets for accounts targeted during confirmed password-spraying activity.
