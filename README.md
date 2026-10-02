@@ -44,10 +44,13 @@ Audit-log analysis of Daniel's account also identified persistence activity, inc
 The remaining 24 accounts were identified as targeted by the password-spraying campaign but were not confirmed as compromised from the available evidence.
 ## Key Findings
 
-- **Password spraying:** 114 failed authentication attempts originated from three IP addresses in the `102.89.*` range and targeted 26 Cloudora accounts.
-- **Daniel Reeve compromised:** Failed authentication attempts were followed by successful sign-ins from attacker-associated infrastructure and access to Microsoft 365, Outlook Web, and Azure Portal.
-- **Priya Nair compromised:** Failed authentication attempts were followed by successful sign-ins from attacker-associated infrastructure and access to Microsoft 365 and SharePoint.
-- **Persistence established:** A Pixel 6 authentication method was registered to Daniel's account after compromise.
+- Password-spraying activity affected 26 Cloudora accounts between 8–10 August 2026.
+- Three attacker IP addresses generated 114 failed authentication attempts.
+- Two accounts were confirmed compromised: Daniel Reeve and Priya Nair.
+- Persistence was established on Daniel Reeve's account through a newly registered authentication method.
+- A malicious inbox rule named `RSS Subscriptions` was created to move finance and invoice-related emails and mark them as read.
+- 24 additional accounts were targeted but were not confirmed compromised based on the available evidence.
+- Omar Farah's Dubai sign-in activity was investigated and found to be consistent with his established sign-in behaviour.
 ## MITRE ATT&CK Mapping
 
 | Tactic | Technique | Technique ID | Evidence |
